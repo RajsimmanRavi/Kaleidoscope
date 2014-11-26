@@ -1,0 +1,108 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <script src="{{ static_url('appJScript.js') }}" type="text/javascript"></script>
+    <style>
+       #title {
+         font-size: 50px;
+         font-family: Trebuchet MS;
+       }
+
+       #stepsForPub {
+         font-family: Trebuchet MS;
+         padding: 5%;
+         font-size: 16px;
+       }
+    </style>
+    
+  </head>
+  <body onload="getName()";>
+    <table>
+      <tbody>
+        <tr>
+          <td>
+    	    <h3 id="title">Kaleidoscope</h3>
+          </td>
+          <td>
+    	    <img style="margin-left: 700px;" src="{{ static_url('SAVI-05.svg') }}" height="70%" />
+          </td>
+          <td>
+            <div style="visibility: hidden; margin-left:85%;" class="dropdown" id="name_logout">
+              <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+	  	<span id="screen_name"></span>   
+          	<span class="caret"></span>
+  	      </button>
+  	      <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                <li role="presentation"><a role="menuitem" tabindex="-1" href="index.html">Log out</a></li>
+  	      </ul>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div id="stepsForPub">
+      <h3>If you want to publish a video, please perform the following steps</h3>
+      <ol>
+        <li>Tweet using the text box shown below</li>
+        <li>A link will be provided after the tweet has been posted on twitter</li>
+        <li>Please click on the link such that more information can be provided in order to setup the VLC player to stream the video</li>
+      </ol>
+      <p>You can tweet using the input box below</p>
+      <input type="text" id="tweet" name="Textbox" maxlength="140" style="width:1000px;"/>
+      <button type="button" id="postTweet" class="btn btn-primary">Tweet</button>
+      <p id="clickMsg" style="visibility: hidden;"> Please click at the following link: </p>
+      <a href="" target="_blank" id="resultPostTweet"></a>
+    </div>
+  <script>
+  function getName(){  
+    var query = location.search.substr(1);
+    var result = {};
+    query.split("&").forEach(function(part) {
+      var item = part.split("=");
+      result[item[0]] = decodeURIComponent(item[1]);
+    });
+    
+    url = "oauth_token="+result['oauth_token'];
+    var ws = new WebSocket("ws://10.23.0.18:8888/name");
+    ws.onopen = function() {
+      ws.send(url);
+    };
+
+    ws.onmessage = function (evt) {
+      document.getElementById("screen_name").innerHTML = evt.data;
+      document.getElementById("name_logout").style.visibility = "visible";
+    };
+ }
+
+  $("#postTweet").click( function(){
+    var query = location.search.substr(1);
+    var result = {};
+    query.split("&").forEach(function(part) {
+      var item = part.split("=");
+      result[item[0]] = decodeURIComponent(item[1]);
+    });
+       
+    var tweet = document.getElementById("tweet").value;
+    url = "tweet="+tweet+"&oauth_token="+result['oauth_token'];
+ 
+    document.getElementById("tweet").innerHTML = "";
+
+    var ws = new WebSocket("ws://10.23.0.18:8888/ws");
+    ws.onopen = function() {
+      ws.send(url);
+    };
+    
+    ws.onmessage = function (evt) {
+      document.getElementById("clickMsg").style.visibility = "visible";
+
+      document.getElementById("resultPostTweet").innerHTML = evt.data;
+      document.getElementById("resultPostTweet").href = evt.data+"&oauth_token="+result['oauth_token'];
+    };
+  }); 
+  </script>
+  </body>
+</html>
